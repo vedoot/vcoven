@@ -137,7 +137,18 @@ details[open] .help-toggle::before { transform: rotate(90deg); }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label { font-size: 12px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+.field-label .req { color: var(--red); margin-left: 3px; }
 .field-hint { font-size: 11px; color: var(--text-3); }
+.form-legend { font-size: 12px; color: var(--text-3); margin-bottom: -4px; }
+.form-legend .req { color: var(--red); }
+.error-msg { display: none; font-size: 11px; color: var(--red); }
+.error-msg::before { content: "⚠ "; }
+.field:has(input:user-invalid) .error-msg,
+.field:has(input.invalid) .error-msg,
+.field.invalid .error-msg { display: block; }
+input:user-invalid, input.invalid { border-color: var(--red); }
+input:user-invalid { background-color: rgba(239, 68, 68, 0.05); }
+.upload-zone.invalid { border-style: solid; border-color: var(--red); background: rgba(239, 68, 68, 0.05); }
 
 input[type="text"], select {
   padding: 10px 14px;
@@ -448,8 +459,9 @@ select { cursor: pointer; }
   <div class="grid">
     <!-- Form -->
     <div class="form">
-      <div class="field">
-        <label class="field-label">GBA ROM</label>
+      <p class="form-legend">Fields marked <span class="req">*</span> are required — the rest are optional and fall back to sensible defaults.</p>
+      <div class="field" id="rom-field">
+        <label class="field-label">GBA ROM<span class="req">*</span></label>
         <div class="upload-zone" id="rom-zone">
           <input type="file" accept=".gba,.bin,*/*" id="rom-input">
           <div class="upload-icon">🎮</div>
@@ -457,12 +469,13 @@ select { cursor: pointer; }
           <div class="upload-file" id="rom-file"></div>
         </div>
         <span class="field-hint">The GBA game file, typically 4–32 MB. Standard ROMs up to 32 MB work. GBA Video carts use a proprietary codec that may not boot under AGB_FIRM.</span>
+        <div class="error-msg" id="rom-error">A ROM is required — it's the game data being converted.</div>
         <div id="rom-warning" style="display:none;background:#3b2a1e;color:#f0a055;border:1px solid #f0a05544;padding:8px 12px;border-radius:6px;margin-top:6px;font-size:13px;"></div>
       </div>
 
       <div class="upload-row">
-        <div class="field">
-          <label class="field-label">Icon</label>
+        <div class="field" id="icon-field">
+          <label class="field-label">Icon<span class="req">*</span></label>
           <div class="upload-zone small" id="icon-zone">
             <input type="file" accept="image/*" id="icon-input">
             <div class="upload-icon">🖼</div>
@@ -470,9 +483,10 @@ select { cursor: pointer; }
             <div class="upload-file" id="icon-file"></div>
           </div>
           <span class="field-hint">Shows on the 3DS home menu as the game's tile icon. Will be resized to 48×48.</span>
+          <div class="error-msg" id="icon-error">An icon is required for the home menu tile.</div>
         </div>
-        <div class="field">
-          <label class="field-label">Banner</label>
+        <div class="field" id="banner-field">
+          <label class="field-label">Banner<span class="req">*</span></label>
           <div class="upload-zone small" id="banner-zone">
             <input type="file" accept="image/*" id="banner-input">
             <div class="upload-icon">🏞</div>
@@ -480,13 +494,15 @@ select { cursor: pointer; }
             <div class="upload-file" id="banner-file"></div>
           </div>
           <span class="field-hint">Displays on the top screen when you hover over the game on the home menu. Letterboxed to 256×128.</span>
+          <div class="error-msg" id="banner-error">A banner is required for the top-screen splash.</div>
         </div>
       </div>
 
       <div class="field">
-        <label class="field-label">Title</label>
-        <input type="text" id="title" placeholder="Pokemon Emerald" oninput="updatePreview()">
+        <label class="field-label">Title<span class="req">*</span></label>
+        <input type="text" id="title" placeholder="Pokemon Emerald" required oninput="updatePreview()">
         <span class="field-hint">The game name shown below the icon on the 3DS home menu. Keep it short.</span>
+        <div class="error-msg">A title is required — it's the name shown on the home menu.</div>
       </div>
 
       <div class="field">
@@ -502,12 +518,13 @@ select { cursor: pointer; }
       </div>
 
       <div class="field">
-        <label class="field-label">Title ID</label>
+        <label class="field-label">Title ID<span class="req">*</span></label>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="title-id" placeholder="0004000000BEAD00" maxlength="16" style="font-family: var(--mono); flex:1;" oninput="updatePreview()">
+          <input type="text" id="title-id" placeholder="0004000000BEAD00" maxlength="16" required pattern="[0-9A-Fa-f]{16}" style="font-family: var(--mono); flex:1;" oninput="updatePreview()">
           <button class="regen-btn" onclick="regenTitleId()" title="Generate random">↻</button>
         </div>
         <span class="field-hint">Unique 16-digit hex ID the 3DS uses to identify this title. Auto-generated — two games with the same ID will conflict. Click ↻ to randomize.</span>
+        <div class="error-msg">Required — must be exactly 16 hex digits (0–9, A–F). Click ↻ to generate a valid one.</div>
       </div>
 
       <div class="field">
@@ -531,8 +548,8 @@ select { cursor: pointer; }
       </div>
 
       <div style="display:flex;gap:10px;">
-        <button class="build-btn" id="build-btn" disabled style="flex:1;">Build & Download</button>
-        <button class="build-btn qr-btn" id="qr-btn" disabled>📱 QR Install</button>
+        <button class="build-btn" id="build-btn" style="flex:1;">Build & Download</button>
+        <button class="build-btn qr-btn" id="qr-btn">📱 QR Install</button>
       </div>
       <div class="build-status" id="build-status">Upload a ROM to get started.</div>
 
@@ -619,7 +636,20 @@ function setupUpload(inputId, zoneId, fileId, type, onLoad) {
   input.addEventListener('change', (e) => {
     const file = e.target.files[0]
     if (!file) return
+
+    if (type === 'image' && file.type && !file.type.startsWith('image/')) {
+      const errEl = document.getElementById(inputId.replace('-input', '-error'))
+      if (errEl) errEl.textContent = `"${file.name}" isn't an image — pick a PNG, JPG, or other image file.`
+      zone.classList.remove('has-file')
+      zone.classList.add('invalid')
+      fileLabel.textContent = ''
+      input.value = ''
+      checkReady()
+      return
+    }
+
     zone.classList.add('has-file')
+    zone.classList.remove('invalid')
     fileLabel.textContent = file.name
     if (onLoad) {
       const reader = new FileReader()
@@ -684,18 +714,63 @@ function updatePreview() {
   checkReady()
 }
 
-function checkReady() {
+const TID_RE = /^[0-9A-Fa-f]{16}$/
+
+function getValidationErrors() {
   const title = document.getElementById('title').value.trim()
   const tid = document.getElementById('title-id').value.trim()
-  const ready = romFile && iconFile && bannerFile && title && tid.length === 16
-  document.getElementById('build-btn').disabled = !ready
-  document.getElementById('qr-btn').disabled = !ready
+  const errors = []
+  if (!romFile) errors.push({ field: 'rom', msg: 'a ROM' })
+  if (!iconFile) errors.push({ field: 'icon', msg: 'an icon' })
+  if (!bannerFile) errors.push({ field: 'banner', msg: 'a banner' })
+  if (!title) errors.push({ field: 'title', msg: 'a title' })
+  if (!TID_RE.test(tid)) errors.push({ field: 'title-id', msg: 'a valid 16-digit Title ID' })
+  return errors
+}
 
-  if (!romFile) document.getElementById('build-status').textContent = 'Upload a ROM to get started.'
-  else if (!iconFile || !bannerFile) document.getElementById('build-status').textContent = 'Upload icon and banner images.'
-  else if (!title) document.getElementById('build-status').textContent = 'Enter a title.'
-  else if (tid.length !== 16) document.getElementById('build-status').textContent = 'Title ID must be 16 hex digits.'
-  else document.getElementById('build-status').textContent = 'Ready to build.'
+function checkReady() {
+  const errors = getValidationErrors()
+  const status = document.getElementById('build-status')
+  status.className = 'build-status'
+  if (errors.length === 0) {
+    status.textContent = 'Ready to build.'
+  } else {
+    status.textContent = 'Still needed: ' + errors.map(e => e.msg).join(', ') + '.'
+  }
+  for (const id of ['rom', 'icon', 'banner']) {
+    if (!errors.some(e => e.field === id)) {
+      document.getElementById(id + '-zone').classList.remove('invalid')
+    }
+  }
+  for (const id of ['title', 'title-id']) {
+    if (!errors.some(e => e.field === id)) {
+      document.getElementById(id).classList.remove('invalid')
+    }
+  }
+}
+
+function validateForm() {
+  const errors = getValidationErrors()
+
+  for (const id of ['rom', 'icon', 'banner']) {
+    document.getElementById(id + '-zone').classList.toggle('invalid', errors.some(e => e.field === id))
+  }
+  document.getElementById('title').classList.toggle('invalid', errors.some(e => e.field === 'title'))
+  document.getElementById('title-id').classList.toggle('invalid', errors.some(e => e.field === 'title-id'))
+
+  if (errors.length === 0) return true
+
+  const first = errors[0].field
+  const focusTarget = ['rom', 'icon', 'banner'].includes(first)
+    ? document.getElementById(first + '-input')
+    : document.getElementById(first)
+  focusTarget.focus()
+  if (focusTarget.scrollIntoView) focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const status = document.getElementById('build-status')
+  status.textContent = 'Missing ' + errors.map(e => e.msg).join(', ') + '.'
+  status.className = 'build-status error'
+  return false
 }
 
 // QR code generator — inline minimal implementation
@@ -861,19 +936,15 @@ function logBuild(fields) {
 async function doBuild(wantQr) {
   const btn = document.getElementById(wantQr ? 'qr-btn' : 'build-btn')
   const status = document.getElementById('build-status')
+
+  if (!validateForm()) return
+
   btn.disabled = true
   status.className = 'build-status'
 
   const romInput = document.getElementById('rom-input')
   const iconInput = document.getElementById('icon-input')
   const bannerInput = document.getElementById('banner-input')
-
-  if (!romInput.files[0] || !iconInput.files[0] || !bannerInput.files[0]) {
-    status.textContent = 'Please upload real files (samples are for preview only).'
-    status.className = 'build-status error'
-    btn.disabled = false
-    return
-  }
 
   try {
     track('build_started', { qr: wantQr, romSize: romInput.files[0].size })
